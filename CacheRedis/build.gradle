@@ -1,0 +1,4 @@
+dependencies {
+    // session redis
+    implementation 'org.springframework.session:spring-session-data-redis'
+}
