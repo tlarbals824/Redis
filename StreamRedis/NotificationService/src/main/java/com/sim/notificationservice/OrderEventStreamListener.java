@@ -1,4 +1,4 @@
-package com.sim.paymentservice;
+package com.sim.notificationservice;
 
 
 import lombok.RequiredArgsConstructor;
@@ -18,24 +18,14 @@ public class OrderEventStreamListener implements StreamListener<String, MapRecor
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    int paymentProcessId=0;
     @Override
     public void onMessage(MapRecord<String, String, String> message) {
         Map<String, String> entry = message.getValue();
-        log.info("entry: {}",entry);
+        log.info("order entry: {}",entry);
 
         String userId = entry.get("userId");
         String productId = entry.get("productId");
-        String price = entry.get("price");
 
-        String paymentIdStr = Integer.toString(paymentProcessId++);
-        Map<String, String> fieldMap = new LinkedHashMap<>();
-        fieldMap.put("userId", userId);
-        fieldMap.put("productId", productId);
-        fieldMap.put("price", price);
-        fieldMap.put("paymentProcessId", paymentIdStr);
-
-        stringRedisTemplate.opsForStream().add("payment-events", fieldMap);
-        log.info("event: {}",fieldMap);
+        log.info("메일 발송, userId: {}, productId: {}",userId, productId);
     }
 }

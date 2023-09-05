@@ -1,7 +1,6 @@
-package com.sim.paymentservice;
+package com.sim.notificationservice;
 
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -18,8 +17,9 @@ import java.time.Duration;
 public class RedisStreamConfig {
 
     private final OrderEventStreamListener orderEventStreamListener;
+    private final PaymentEventStreamListener paymentEventStreamListener;
     @Bean
-    public Subscription subscription(RedisConnectionFactory redisConnectionFactory){
+    public Subscription orderSubscription(RedisConnectionFactory redisConnectionFactory){
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
             .builder()
             .pollTimeout(Duration.ofSeconds(1))
@@ -27,8 +27,24 @@ public class RedisStreamConfig {
 
         var listenerContainer = StreamMessageListenerContainer.create(redisConnectionFactory,  options);
 
-        Subscription subscription = listenerContainer.receiveAutoAck(Consumer.from("payment-service-group", "instance-1"),
+        Subscription subscription = listenerContainer.receiveAutoAck(Consumer.from("notification-service-group", "instance-1"),
             StreamOffset.create("order-events", ReadOffset.lastConsumed()), orderEventStreamListener);
+
+        listenerContainer.start();
+        return subscription;
+    }
+
+    @Bean
+    public Subscription paymentSubscription(RedisConnectionFactory redisConnectionFactory){
+        var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
+            .builder()
+            .pollTimeout(Duration.ofSeconds(1))
+            .build();
+
+        var listenerContainer = StreamMessageListenerContainer.create(redisConnectionFactory,  options);
+
+        Subscription subscription = listenerContainer.receiveAutoAck(Consumer.from("notification-service-group", "instance-1"),
+            StreamOffset.create("payment-events", ReadOffset.lastConsumed()), paymentEventStreamListener);
 
         listenerContainer.start();
         return subscription;
